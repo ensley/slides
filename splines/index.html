@@ -7,7 +7,7 @@
 		<title>reveal.js</title>
 
 		<link rel="stylesheet" href="css/reveal.css">
-		<link rel="stylesheet" href="css/theme/black.css">
+		<link rel="stylesheet" href="css/theme/simple.css">
 
 		<!-- Theme used for syntax highlighting of code -->
 		<link rel="stylesheet" href="lib/css/zenburn.css">
@@ -20,31 +20,498 @@
 			link.href = window.location.search.match( /print-pdf/gi ) ? 'css/print/pdf.css' : 'css/print/paper.css';
 			document.getElementsByTagName( 'head' )[0].appendChild( link );
 		</script>
+
+		<script src="lib/js/head.min.js"></script>
+		<script src="lib/js/d3.min.js"></script>
+		<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+		<script src="js/reveal.js"></script>
+
+		<style type="text/css">
+		.thm {
+			background-color: #ddd;
+			padding: 10px !important;
+		}
+
+		p.math {
+			font-size: 0.8em;
+		}
+
+		section p {
+			text-align: left;
+		}
+
+		text {
+			font: 10px sans-serif;
+		}
+
+		.axis path,
+		.axis line {
+			fill: none;
+			stroke: #000;
+			shape-rendering: crispEdges;
+		}
+
+		.points {
+			fill: #000;
+			r: 4;
+		}
+
+		.line {
+			fill: none;
+			stroke: steelblue;
+			stroke-width: 2.5px;
+		}
+
+		.lineFit {
+			fill: none;
+			stroke: red;
+			stroke-width: 3.5px;
+		}
+
+		text {
+			fill: #000;
+		}
+
+		input {
+			width: 50px;
+			height: 30px;
+		}
+		</style>
+
 	</head>
 	<body>
 		<div class="reveal">
 			<div class="slides">
-				<section>Slide 1</section>
-				<section>Slide 2</section>
+
+				<section>
+					<h3>Bayesian semiparametric covariance function estimation for stationary Gaussian processes</h3>
+					<h4>John Ensley</h4>
+				</section>
+
+				<section>
+					<section>
+						<h2>Background</h2>
+					</section>
+
+					<section>
+						<h3>What is a Gaussian process?</h3>
+						<p>You can think about it in two ways:</p>
+            <p>A normal distribution over <i>functions</i>, instead of random variables.</p>
+            <p> An infinite-dimensional generalization of multivariate normal distributions.</p>
+					</section>
+
+          <section data-state="gp1d" id="gp1d">
+            <script type='text/javascript'>
+Reveal.addEventListener('gp1d', function() {
+  d3.select('#gp1d').selectAll('svg').remove();
+
+var margin = { top: 20, right: 10, bottom: 20, left: 30 };
+
+var width = 960 - margin.left - margin.right,
+    height = 500 - margin.top - margin.bottom;
+
+var svg = d3.select('#gp1d').append('svg')
+    .attr('width', width + margin.left + margin.right)
+    .attr('height', height + margin.top + margin.bottom)
+  .append('g')
+    .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+
+var x = d3.scaleLinear()
+  .range([0, width]);
+
+var y = d3.scaleLinear()
+  .range([height, 0]);
+
+var color = d3.scaleOrdinal(d3.schemeCategory10);
+
+var yAxis = d3.axisLeft(y);
+
+var line = d3.line()
+    .x(function(d) { return x(d.x); })
+    .y(function(d) { return y(d.y); })
+    .curve(d3.curveNatural);
+
+d3.json('lib/data/gp1d.json', function(err, data) {
+    if (err) throw err;
+
+    var labelVar = 'x';
+
+    var varNames = d3.keys(data[0])
+        .filter(function(key) { return key !== labelVar; });
+
+    var seriesData = varNames.map(function(id) {
+        return {
+          id: id,
+          values: data.map(function(d) {
+            return { id: id, x: +d[labelVar], y: +d[id] };
+          })
+        };
+    });
+
+    color.domain(varNames);
+
+    x.domain([
+        d3.min(seriesData, function(c) {
+            return d3.min(c.values, function(d) { return d.x; });
+        }),
+        d3.max(seriesData, function(c) {
+            return d3.max(c.values, function(d) { return d.x; });
+        })
+    ]).nice();
+
+    y.domain([
+        d3.min(seriesData, function(c) {
+            return d3.min(c.values, function(d) { return d.y; });
+        }),
+        d3.max(seriesData, function(c) {
+            return d3.max(c.values, function(d) { return d.y; });
+        })
+    ]).nice();
+
+    svg.append('g')
+      .attr('class', 'y axis')
+      .call(yAxis);
+
+    svg.selectAll('.series')
+      .data(seriesData)
+      .enter().append('path')
+        // .attr('class', 'line')
+        .attr('fill', 'none')
+        .attr('stroke-width', 2.5)
+        .attr('stroke', function(d) { return color(d.id); })
+        .attr('d', function(d) { return line(d.values); })
+        .attr('stroke-dasharray', function() {
+          var totalLength = this.getTotalLength();
+          return totalLength + ' ' + totalLength;
+        })
+        .attr('stroke-dashoffset', function() {
+          var totalLength = this.getTotalLength();
+          return totalLength;
+        })
+      .transition()
+        .duration(1500)
+        .ease(d3.easeLinear)
+        .attr('stroke-dashoffset', 0);
+
+
+});
+
+});              
+            </script>
+          </section>
+
+          <section data-state="gpviz" id="gpviz">
+            <div id="gp"></div>
+            <script type="text/javascript">
+Reveal.addEventListener('gpviz', function() {
+
+Plotly.d3.json('lib/data/fz.json', function(err, rows) {
+
+  if (err) throw err;
+
+  console.log(rows);
+
+  var data = [{
+    z: rows,
+    type: 'surface'
+  }];
+
+  var layout = {
+    autosize: false,
+    width: 960,
+    height: 600,
+    margin: {
+      l: 65,
+      r: 50,
+      b: 65,
+      t: 90
+    }
+  };
+
+  Plotly.newPlot('gp', data, layout);
+
+});
+
+});
+            </script>
+          </section>
+
+					<section>
+						<h3>What is a Gaussian process?</h3>
+						<p>A <i>Gaussian process</i> is a collection of random variables \(Y(s)\) that vary over a continuous domain \(\mathcal{D} \subseteq \mathbb{R}^d\), such that the joint distribution of \(Y(s_1, \dots, s_n)^T\) is multivariate Gaussian for every \(n\) and every collection \(s_1, \dots, s_n\) of sites in \(\mathcal{D}\).</p>
+						<p>If WLOG we assume the process has mean zero, then Gaussian processes are characterized entirely by their covariance function.</p>
+					</section>
+
+					<section>
+						<h3>What is a Gaussian process?</h3>
+						<p>Further assume that \(Y(s)\) is <i>stationary</i> and <i>isotropic</i>, i.e.</p>
+						<p class="math">$$\textrm{Cov}(Y(s), Y(s+h)) = \textrm{Cov}(Y(0), Y(h)) = C(h) = C(||h||).$$</p>
+						<p>If we can estimate \(C\), we know everything about \(Y(s)\).</p>
+						<p>\(C\) must be a <b>positive definite function</b>: for any \(s_1, \dots, s_n \in \mathcal{D}\), the covariance matrix of their joint distribution is non-negative definite.</p>
+					</section>
+
+					<section>
+						<!-- <div class="thm"> -->
+							<h3>Bochner's Theorem</h3>
+							<p>A real-valued continuous function \(C\) is positive definite if and only if it is the Fourier transform of a symmetric, non-negative finite measure \(F\) on \(\mathbb{R}^d\):</p>
+							<p class="math">$$C(h) = \int_{\mathbb{R}^d} \exp(i\;h^T\omega) \; dF(\omega) = \int_{\mathbb{R}^d} \cos(h^T\omega) \; dF(\omega).$$</p>
+							<p>In most cases, \(F\) has a Lebesgue density \(f\), called the <i>spectral density</i>.</p>
+							<p class="math">$$C(h) = \int_{\mathbb{R}^d} \cos(h^T\omega) \; f(\omega) \; d\omega$$</p>
+						<!-- </div> -->
+					</section>
+
+					<section>
+						<h3>Goal</h3>
+						<p>A fully Bayesian framework for estimating \(C\), where we aren't required to choose from commonly used parametric families.</p>
+						<p>Working in the spectral domain guarantees that we end up with a valid covariance function.</p>
+						<p>We aim to estimate the spectral density using splines and then transform that into an estimated covariance function.</p>
+					</section>
+				</section>
+
+				<section>
+					<section>
+						<h2>Procedure</h2>
+					</section>
+
+					<section>
+						<p class="math">$$C(h) = \int_{\mathbb{R}^d} \cos(h^T\omega) \; f(\omega) \; d\omega$$</p>
+
+					</section>
+				</section>
+
+				<section data-state="splineviz" id="splineviz">
+					<!-- <h3>Test</h3> -->
+					
+					<div id="splinevizDiv"></div>
+					<input type="button" id="splineBtn" value="Step">
+					<script type="text/javascript">
+Reveal.addEventListener('splineviz', function() {
+
+d3.select('#splinevizDiv').selectAll('svg').remove();
+
+var curStage = -1;
+
+var margin = { top: 20, right: 80, bottom: 30, left: 50 },
+		width = 960 - margin.left - margin.right,
+		height = 500 - margin.top - margin.bottom;
+
+var x = d3.scaleLinear()
+    .range([0, width]);
+
+var y = d3.scaleLinear()
+    .range([height, 0]);
+
+var yAxis = d3.axisLeft(y);
+
+var line = d3.line()
+    .x(function(d) { return x(d.label); })
+    .y(function(d) { return y(d.value); })
+    .curve(d3.curveNatural);
+
+var lineFit = d3.line()
+    .x(function(d) { return x(d.x); })
+    .y(function(d) { return y(d.fit); })
+    .curve(d3.curveNatural);
+
+var svg = d3.select('#splinevizDiv').selectAll('svg').data([0]).enter().append('svg')
+    .attr('width', width + margin.left + margin.right)
+    .attr('height', height + margin.top + margin.bottom)
+    .append('g')
+    .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+
+d3.json('lib/data/dat.json', function(err, data) {
+    if (err) throw err;
+
+    var labelVar = 'x';
+    var varNames = d3.keys(data[0])
+        .filter(function(key) { return key !== labelVar; });
+
+    var basisNames = varNames.filter(function(key) {
+        return key && key.toLowerCase().indexOf('basis') === 0;
+    });
+
+    var coefNames = varNames.filter(function(key) {
+        return key && key.toLowerCase().indexOf('coef') === 0;
+    });
+
+    var basisData = basisNames.map(function(name) {
+        return {
+            name: name,
+            values: data.map(function(d) {
+                return { name: name, label: d[labelVar], value: +d[name] };
+            })
+        };
+    });
+
+    var coefData = coefNames.map(function(name) {
+        return {
+            name: name,
+            values: data.map(function(d) {
+                return { name: name, label: d[labelVar], value: +d[name] };
+            })
+        };
+    });
+
+    var fitData = data.map(function(d) {
+        return {
+            x: +d.x,
+            fit: +d.fit
+        }
+    });
+
+    var yData = data.map(function(d) {
+        return {
+            x: +d.x,
+            y: +d.y
+        }
+    });
+
+    var stage = [ basisData, coefData, fitData, yData ];
+
+    x.domain([data[0].x, data[data.length - 1].x]).nice();
+    y.domain(d3.extent(yData, function(d) { return d.y; })).nice();
+
+    svg.append('g')
+        .attr('class', 'y axis')
+        .call(yAxis);
+
+    svg.selectAll('.points')
+        .data(yData)
+        .enter().append('circle')
+        .attr('class', 'points')
+        .attr('cx', function(d) { return x(d.x); })
+        .attr('cy', function(d) { return y(d.y); });
+
+    d3.select('input#splineBtn').on('click', function() { return step(stage); });
+
+    });
+
+    function step(stage) {
+        switch(curStage = (curStage + 1) % 3) {
+            // reset back to basis functions
+            case 0:
+                d3.select('input#splineBtn').attr('value', 'Step');
+
+                svg.selectAll('.series').remove();
+                svg.selectAll('.lineFit').remove();
+
+                var t0 = svg.transition().duration(750);
+
+                y.domain([
+                    d3.min(stage[curStage], function(c) {
+                        return d3.min(c.values, function(d) { return d.value; });
+                    }),
+                    d3.max(stage[curStage], function(c) {
+                        return d3.max(c.values, function(d) { return d.value; });
+                    })
+                ]);
+
+                t0.selectAll('.y.axis').call(yAxis);
+                svg.selectAll('.points')
+                    .transition(t0)
+                    .attr('cy', function(d) { return y(d.y); });
+
+                var series = svg.selectAll('.series')
+                    .data(stage[curStage])
+                    .enter().append('g')
+                    .attr('class', 'series');
+
+                var t1 = t0.transition();
+                series.append('path')
+                    .attr('class', 'line')
+                    .attr('stroke-opacity', 1e-6)
+                    .transition(t1)
+                    .attr('stroke-opacity', 1)
+                    .attr('d', function(d) { return line(d.values); });
+
+                break;
+
+            // basis functions -> scaled basis functions
+            case 1:
+                // initialize the transition
+                var t0 = svg.transition().duration(750);
+                // select the current lines
+                var lines = svg.selectAll('.line')
+                    .data(stage[curStage]);
+                // animate the lines
+                lines.transition(t0)
+                    .attr('d', function(d) { return line(d.values); });
+
+                // adjust the extent of the y axis
+                y.domain([
+                    d3.min(stage[curStage], function(c) {
+                        return d3.min(c.values, function(d) { return d.value; });
+                    }),
+                    d3.max(stage[curStage], function(c) {
+                        return d3.max(c.values, function(d) { return d.value; });
+                    })
+                ]);
+
+                // new transition
+                var t1 = t0.transition();
+                // animate the lines and the new y axis
+                lines.transition(t1)
+                    .attr('d', function(d) { return line(d.values); });
+                t1.selectAll('.y.axis').call(yAxis);
+                t1.selectAll('.points')
+                    .attr('cy', function(d) { return y(d.y); });
+                break;
+
+            // sum scaled basis functions
+            case 2:
+                d3.select('input#splineBtn').attr('value', 'Reset');
+                // initialize the transition
+                var t2 = svg.transition().duration(750);
+
+                // first, add the new line
+                var fitline = svg.append('path')
+                    .datum(stage[curStage]);
+
+                fitline.attr('class', 'lineFit')
+                    .style('stroke-opacity', 1e-6)
+                    .transition(t2)
+                    .attr('d', function(d) { return lineFit(d); })
+                    .style('stroke-opacity', 1);
+
+                // next, get rid of the existing lines
+                var lines = svg.selectAll('.line');
+                var t3 = t2.transition();
+                lines.transition(t3)
+                    .style('stroke-opacity', 1e-6)
+                    .remove();
+
+                break;
+
+        }
+
+    }
+
+}, false);
+					</script>
+				</section>
 			</div>
 		</div>
 
-		<script src="lib/js/head.min.js"></script>
-		<script src="js/reveal.js"></script>
+	<script>
+		// More info https://github.com/hakimel/reveal.js#configuration
+		Reveal.initialize({
+			history: true,
 
-		<script>
-			// More info https://github.com/hakimel/reveal.js#configuration
-			Reveal.initialize({
-				history: true,
+			math: {
+				mathjax: 'https://cdn.mathjax.org/mathjax/latest/MathJax.js',
+				config: 'TeX-AMS_HTML-full'
+			},
 
-				// More info https://github.com/hakimel/reveal.js#dependencies
-				dependencies: [
-					{ src: 'plugin/markdown/marked.js' },
-					{ src: 'plugin/markdown/markdown.js' },
-					{ src: 'plugin/notes/notes.js', async: true },
-					{ src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } }
-				]
-			});
-		</script>
+			// More info https://github.com/hakimel/reveal.js#dependencies
+			dependencies: [
+				{ src: 'plugin/markdown/marked.js' },
+				{ src: 'plugin/markdown/markdown.js' },
+				{ src: 'plugin/notes/notes.js', async: true },
+				{ src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+				{ src: 'plugin/math/math.js', async: true }
+			]
+		});
+	</script>
+
 	</body>
 </html>
