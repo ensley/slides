@@ -32,6 +32,11 @@
 			padding: 10px !important;
 		}
 
+        .reveal section img {
+            border: 0;
+            box-shadow: none;
+        }
+
 		p.math {
 			font-size: 0.8em;
 		}
@@ -95,7 +100,7 @@
 
 					<section>
 						<h3>What is a Gaussian process?</h3>
-						<p>You can think about it in two ways:</p>
+						<p>Think about it as:</p>
             <p>A normal distribution over <i>functions</i>, instead of random variables.</p>
             <p> An infinite-dimensional generalization of multivariate normal distributions.</p>
 					</section>
@@ -238,14 +243,15 @@ Plotly.d3.json('lib/data/fz.json', function(err, rows) {
 
 					<section>
 						<h3>What is a Gaussian process?</h3>
-						<p>A <i>Gaussian process</i> is a collection of random variables \(Y(s)\) that vary over a continuous domain \(\mathcal{D} \subseteq \mathbb{R}^d\), such that the joint distribution of \(Y(s_1, \dots, s_n)^T\) is multivariate Gaussian for every \(n\) and every collection \(s_1, \dots, s_n\) of sites in \(\mathcal{D}\).</p>
-						<p>If WLOG we assume the process has mean zero, then Gaussian processes are characterized entirely by their covariance function.</p>
+						<p>$$\{Y(s): s \in \mathcal{D} \subseteq \mathbb{R}^d\}$$</p>
+                        <p>A collection of random variables that vary over a continuous domain such that the joint distribution of \((Y(s_1), \dots, Y(s_n))^T\) is multivariate normal for every \(n\) and every collection \(s_1, \dots, s_n\) of sites in \(\mathcal{D}\).</p>
 					</section>
 
 					<section>
-						<h3>What is a Gaussian process?</h3>
-						<p>Further assume that \(Y(s)\) is <i>stationary</i> and <i>isotropic</i>, i.e.</p>
+						<!-- <h3>What is a Gaussian process?</h3> -->
+						<p>Assume that \(Y(s)\) is <i>stationary</i> and <i>isotropic</i>, i.e.</p>
 						<p class="math">$$\textrm{Cov}(Y(s), Y(s+h)) = \textrm{Cov}(Y(0), Y(h)) = C(h) = C(||h||).$$</p>
+                        <p>If we assume the process has mean zero, then Gaussian processes are characterized entirely by their covariance function.</p>
 						<p>If we can estimate \(C\), we know everything about \(Y(s)\).</p>
 						<p>\(C\) must be a <b>positive definite function</b>: for any \(s_1, \dots, s_n \in \mathcal{D}\), the covariance matrix of their joint distribution is non-negative definite.</p>
 					</section>
@@ -274,17 +280,31 @@ Plotly.d3.json('lib/data/fz.json', function(err, rows) {
 					</section>
 
 					<section>
-						<p class="math">$$C(h) = \int_{\mathbb{R}^d} \cos(h^T\omega) \; f(\omega) \; d\omega$$</p>
-
+                        <h3>Estimating the integral</h3>
+						<p class="math">$$C(h) = \int_{\mathbb{R}^d} \cos(h\omega) \; f(\omega) \; d\omega$$</p>
+                        <p class="math">$$\quad \approx \frac{1}{M} \sum_{i=1}^M \cos\big(h \tilde{\omega}_i \big)$$</p>
+                        <p>where \(\{\tilde{\omega}_1, \dots, \tilde{\omega}_M\}\) are random samples from \(f(\omega)\)</p>
 					</section>
-				</section>
 
-				<section data-state="splineviz" id="splineviz">
-					<!-- <h3>Test</h3> -->
-					
-					<div id="splinevizDiv"></div>
-					<input type="button" id="splineBtn" value="Step">
-					<script type="text/javascript">
+                    <section>
+                        <h3>Obtaining spectral density samples</h3>
+                        <p>Lots of options: inverse CDF, rejection sampling, importance sampling, MCMC, ...</p>
+                        <p>We don't even know what \(f(\omega)\) looks like! We'll have to estimate that too.</p>
+                    </section>
+
+                    <section>
+                        <h3>Estimating on the log scale</h3>
+                        <img src="lib/img/dens_ex.png">
+                        <img src="lib/img/logdens_ex.png">
+                        <p>Power law tails in \(f(\omega)\) correspond to linear tails in \(\log f(\log \omega)\). Easy to estimate using splines.</p>
+                    </section>
+
+    				<section data-state="splineviz" id="splineviz">
+    					<!-- <h3>Test</h3> -->
+    					
+    					<div id="splinevizDiv"></div>
+    					<input type="button" id="splineBtn" value="Step">
+    					<script type="text/javascript">
 Reveal.addEventListener('splineviz', function() {
 
 d3.select('#splinevizDiv').selectAll('svg').remove();
@@ -487,8 +507,22 @@ d3.json('lib/data/dat.json', function(err, data) {
     }
 
 }, false);
-					</script>
-				</section>
+					   </script>
+				    </section>
+
+                    <section>
+                        <ol>
+                            <li>Estimate the (log-log) spectral density with splines</li>
+                            <p class="math">$$\log \hat{f}(\log \omega) = \sum_{k=1}^K \beta_k B_k(\log \omega)$$</p>
+                            <li>Use inverse CDF method to sample from \(\hat{f}\)</li>
+                            <li>Estimate covariance function with Monte Carlo integration</li>
+                            <p class="math">$$\hat{C}(h) = \frac{1}{M} \sum_{i=1}^M \cos\big(h \tilde{\omega}_i \big)$$</p>
+                        </ol>
+                        
+
+                    </section>
+
+                </section>
 			</div>
 		</div>
 
