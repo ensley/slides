@@ -256,6 +256,24 @@ Plotly.d3.json('lib/data/fz.json', function(err, rows) {
 						<p>\(C\) must be a <b>positive definite function</b>: for any \(s_1, \dots, s_n \in \mathcal{D}\), the covariance matrix of their joint distribution is non-negative definite.</p>
 					</section>
 
+                    <section>
+                        <h3>Commonly used \(C\)</h3>
+                        <ul>
+                            <li>
+                                Matérn class
+                                <p class="math">$$C(h) = \frac{2^{1-\nu}}{\Gamma(\nu)} \left( \frac{h}{\theta} \right)^\nu \mathcal{K}_\nu \left( \frac{h}{\theta} \right) \qquad \nu, \theta > 0$$</p>
+                            </li>
+                            <li>
+                                Cauchy class
+                                <p class="math">$$C(h) = \left( 1 + \left( \frac{h}{\theta} \right)^\alpha \right)^{-\beta/\alpha} \qquad 0 < \alpha \leq 2, \; \beta > 0, \; \theta > 0$$</p>
+                            </li>
+                            <li>
+                                Exponentially damped cosine
+                                <p class="math">$$C(h) = \exp \left( -\tau \frac{h}{\theta} \right) \cos \left(\frac{h}{\theta}\right) \qquad \tau \geq \frac{1}{\tan \frac{\pi}{2d}}, \; \theta > 0$$</p>
+                            </li>
+                        </ul>
+                    </section>
+
 					<section>
 						<!-- <div class="thm"> -->
 							<h3>Bochner's Theorem</h3>
@@ -511,6 +529,7 @@ d3.json('lib/data/dat.json', function(err, data) {
 				    </section>
 
                     <section>
+                        <h3>How to estimate \(C\)</h3>
                         <ol>
                             <li>Estimate the (log-log) spectral density with splines</li>
                             <p class="math">$$\log \hat{f}(\log \omega) = \sum_{k=1}^K \beta_k B_k(\log \omega)$$</p>
@@ -518,8 +537,31 @@ d3.json('lib/data/dat.json', function(err, data) {
                             <li>Estimate covariance function with Monte Carlo integration</li>
                             <p class="math">$$\hat{C}(h) = \frac{1}{M} \sum_{i=1}^M \cos\big(h \tilde{\omega}_i \big)$$</p>
                         </ol>
-                        
 
+                    </section>
+
+                    <section>
+                        <h3>The MCMC algorithm</h3>
+                        <ol>
+                            <li>Simulate \(N\) observations \(\{Y_n\}\) from a GP</li>
+                            <li>Begin with an initial guess \((\beta_1, \dots, \beta_K)\)</li>
+                            <li>
+                                Get new \(\beta\)s from a Metropolis-Hastings update
+                                <ul>
+                                    <li>Construct covariance matrix \(\Sigma\) as previous slide</li>
+                                    <li>Likelihood: \(\quad \ell(\beta; Y) \sim N(0, \Sigma)\)</li>
+                                </ul>
+                            </li>
+                            <li>Repeat 3. lots of times to get random draws from posterior \(\beta | Y\)</li>
+                        </ol>
+                    </section>
+
+                    <section>
+                        <h3>Priors</h3>
+                        <ul>
+                            <li>$$p(\beta_j|\beta_{j-1},\beta_{j-2},\tau) \sim N(2\beta_{j-1} - \beta_{j-2}, \tau)$$</li>
+                            <li>$$p(\tau) \sim IG(a_\tau, b_\tau)$$</li>
+                        </ul>
                     </section>
 
                 </section>
