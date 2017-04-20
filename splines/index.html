@@ -555,15 +555,35 @@ d3.json('lib/data/dat.json', function(err, data) {
                             <li>Repeat 3. lots of times to get random draws from posterior \(\beta | Y\)</li>
                         </ol>
                     </section>
+                </section>
+
+                <section>
+                    <section>
+                        <h2>Computational challenges</h2>
+                    </section>
 
                     <section>
-                        <h3>Priors</h3>
+                        <h3>Likelihood calculation is extremely expensive</h3>
                         <ul>
-                            <li>$$p(\beta_j|\beta_{j-1},\beta_{j-2},\tau) \sim N(2\beta_{j-1} - \beta_{j-2}, \tau)$$</li>
-                            <li>$$p(\tau) \sim IG(a_\tau, b_\tau)$$</li>
+                            <li>\(N = 400\) observations of Gaussian process, so \(\hat{\Sigma}\) is \(400 \times 400\) (160,000 elements)</li>
+                            <li>Every \(\hat{\Sigma}_{ij}\) approximated by MC with \(M = 10000-50000\) samples</li>
+                            <li>For variable-at-a-time Metropolis-Hastings, likelihood needs to be calculated once for all \(K = 4-10\) knots</li>
                         </ul>
                     </section>
 
+                    <section>
+                        <h2>GPU acceleration</h2>
+                        <img src="lib/img/gpu.png" height="500">
+                    </section>
+                </section>
+
+                <section>
+                    <section>
+                        <h2>Results</h2>
+                    </section>
+                    <section>
+                        
+                    </section>
                 </section>
 			</div>
 		</div>
