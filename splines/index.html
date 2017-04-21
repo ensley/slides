@@ -582,7 +582,22 @@ d3.json('lib/data/dat.json', function(err, data) {
                         <h2>Results</h2>
                     </section>
                     <section>
-                        
+                        <ol>
+                            <li>Generated 400 observation locations over the unit grid</li>
+                            <li>Generated points along GP with Matern covariance function: \(\nu = 1.5\), \(\alpha = 4.76\), \(\sigma = 1\)</li>
+                        </ol>
+                        <img src="lib/img/obspts.png", height="450">
+                    </section>
+                    <section>
+                        Obtained 10,000 samples from M-H algorithm
+                        <img src="lib/img/result.png", height="500">
+                    </section>
+                    <section>
+                        <h2>Future work</h2>
+                        <ul>
+                            <li>Improve performance</li>
+                            <li>Relax the stationarity/isotropy assumptions</li>
+                        </ul>
                     </section>
                 </section>
 			</div>
